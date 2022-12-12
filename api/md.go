@@ -28,6 +28,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	url := queryParams.Get("url")
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
+
 	allocatorContext, cancel := chromedp.NewRemoteAllocator(
 		context.Background(),
 		fmt.Sprintf(
@@ -72,7 +75,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		strings.Join(itemNames, "\n"),
 	)
 
-	w.Header().Add("Cache-Control", "s-maxage=86400")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(response))
 }
