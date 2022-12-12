@@ -14,12 +14,15 @@ import (
 )
 
 var browserlessApiKey string
+var cache map[string]string
 
 func main() {
 	browserlessApiKey = os.Getenv("BROWSERLESS_API_KEY")
 	if browserlessApiKey == "" {
 		panic("the BROWSERLESS_API_KEY environment variable is not set!")
 	}
+
+	cache = make(map[string]string)
 
 	e := echo.New()
 	e.GET("/md", getBundleMarkdown)
@@ -34,6 +37,10 @@ func getBundleMarkdown(c echo.Context) error {
 			http.StatusBadRequest,
 			"the query param 'url' is required",
 		)
+	}
+
+	if bundle, ok := cache[url]; ok {
+		return c.String(http.StatusOK, bundle)
 	}
 
 	allocatorContext, cancel := chromedp.NewRemoteAllocator(
@@ -71,11 +78,12 @@ func getBundleMarkdown(c echo.Context) error {
 		)
 	}
 
-	return c.String(
-		http.StatusOK, fmt.Sprintf(
-			"Humble Bundle \"%s\"\n\n%s",
-			strings.TrimLeft(strings.Split(title, ":")[1], " "),
-			strings.Join(itemNames, "\n"),
-		),
+	response := fmt.Sprintf(
+		"Humble Bundle \"%s\"\n\n%s",
+		strings.TrimLeft(strings.Split(title, ":")[1], " "),
+		strings.Join(itemNames, "\n"),
 	)
+	cache[url] = response
+
+	return c.String(http.StatusOK, response)
 }
