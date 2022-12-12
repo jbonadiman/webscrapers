@@ -72,5 +72,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		strings.Join(itemNames, "\n"),
 	)
 
+	w.Header().Add("Cache-Control", "s-maxage=86400")
+	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(response))
 }
