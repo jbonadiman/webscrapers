@@ -2,42 +2,43 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
+	"github.com/labstack/echo"
 )
 
+var browserlessApiKey string
+
 func main() {
-	browserlessApiKey := os.Getenv("BROWSERLESS_API_KEY")
+	browserlessApiKey = os.Getenv("BROWSERLESS_API_KEY")
 	if browserlessApiKey == "" {
 		panic("the BROWSERLESS_API_KEY environment variable is not set!")
 	}
 
-	url := flag.String(
-		"url",
-		"",
-		"the Humble Book Bundle url",
-	)
+	e := echo.New()
+	e.GET("/md", getBundleMarkdown)
 
-	devtoolsWsURL := flag.String(
-		"devtools-ws-url",
-		fmt.Sprintf("wss://chrome.browserless.io?token=%s", browserlessApiKey),
-		"DevTools Websocket URL",
-	)
-	flag.Parse()
+	e.Logger.Fatal(e.Start(":8080"))
+}
 
-	if *url == "" {
-		panic("the Humble Book Bundle url must be provided")
+func getBundleMarkdown(c echo.Context) error {
+	url := c.QueryParam("url")
+	if url == "" {
+		return c.String(
+			http.StatusBadRequest,
+			"the query param 'url' is required",
+		)
 	}
 
 	allocatorContext, cancel := chromedp.NewRemoteAllocator(
 		context.Background(),
-		*devtoolsWsURL,
+		fmt.Sprintf("wss://chrome.browserless.io?token=%s", browserlessApiKey),
 	)
 	defer cancel()
 
@@ -50,7 +51,7 @@ func main() {
 
 	if err := chromedp.Run(
 		ctx,
-		chromedp.Navigate(*url),
+		chromedp.Navigate(url),
 		chromedp.AttributeValue(
 			".bundle-logo",
 			"alt",
@@ -70,9 +71,11 @@ func main() {
 		)
 	}
 
-	fmt.Printf(
-		"Humble Bundle \"%s\"\n\n%s",
-		strings.TrimLeft(strings.Split(title, ":")[1], " "),
-		strings.Join(itemNames, "\n"),
+	return c.String(
+		http.StatusOK, fmt.Sprintf(
+			"Humble Bundle \"%s\"\n\n%s",
+			strings.TrimLeft(strings.Split(title, ":")[1], " "),
+			strings.Join(itemNames, "\n"),
+		),
 	)
 }
