@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"context"
@@ -10,42 +10,30 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
-	"github.com/labstack/echo"
 )
 
-var browserlessApiKey string
-var cache map[string]string
-
-func main() {
-	browserlessApiKey = os.Getenv("BROWSERLESS_API_KEY")
+//goland:noinspection GoUnusedExportedFunction
+func Handler(w http.ResponseWriter, r *http.Request) {
+	browserlessApiKey := os.Getenv("BROWSERLESS_API_KEY")
 	if browserlessApiKey == "" {
 		panic("the BROWSERLESS_API_KEY environment variable is not set!")
 	}
 
-	cache = make(map[string]string)
+	queryParams := r.URL.Query()
 
-	e := echo.New()
-	e.GET("/md", getBundleMarkdown)
-
-	e.Logger.Fatal(e.Start(":8080"))
-}
-
-func getBundleMarkdown(c echo.Context) error {
-	url := c.QueryParam("url")
-	if url == "" {
-		return c.String(
-			http.StatusBadRequest,
-			"the query param 'url' is required",
-		)
+	if !queryParams.Has("url") {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("the query param 'url' is required"))
+		return
 	}
-
-	if bundle, ok := cache[url]; ok {
-		return c.String(http.StatusOK, bundle)
-	}
+	url := queryParams.Get("url")
 
 	allocatorContext, cancel := chromedp.NewRemoteAllocator(
 		context.Background(),
-		fmt.Sprintf("wss://chrome.browserless.io?token=%s", browserlessApiKey),
+		fmt.Sprintf(
+			"wss://chrome.browserless.io?token=%s",
+			browserlessApiKey,
+		),
 	)
 	defer cancel()
 
@@ -83,7 +71,6 @@ func getBundleMarkdown(c echo.Context) error {
 		strings.TrimLeft(strings.Split(title, ":")[1], " "),
 		strings.Join(itemNames, "\n"),
 	)
-	cache[url] = response
 
-	return c.String(http.StatusOK, response)
+	_, _ = w.Write([]byte(response))
 }
