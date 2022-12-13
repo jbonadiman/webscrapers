@@ -60,7 +60,7 @@ func GetBundleData(browserlessToken string, url string) (
 		return "", nil, err
 	}
 
-	bundleName, _ := doc.Find(".bundle-logo").First().Attr("val")
+	bundleName, _ := doc.Find(".bundle-logo").First().Attr("alt")
 
 	var itemNames []string
 
