@@ -1,52 +1,76 @@
 package internal
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
+	"net/http"
 
-	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/chromedp"
+	"github.com/PuerkitoBio/goquery"
 )
 
-func GetBundleData(browserlessToken string, url string) (string, []string) {
-	allocatorContext, cancel := chromedp.NewRemoteAllocator(
-		context.Background(),
-		fmt.Sprintf(
-			"wss://chrome.browserless.io?token=%s",
-			browserlessToken,
-		),
+func getBundleContent(browserlessToken string, url string) ([]byte, error) {
+	reqBody, err := json.Marshal(
+		map[string]string{"url": url},
 	)
-	defer cancel()
 
-	ctx, cancel := chromedp.NewContext(allocatorContext)
-	defer cancel()
-
-	var bundleName string
-	var items []*cdp.Node
-	var itemNames []string
-
-	if err := chromedp.Run(
-		ctx,
-		chromedp.Navigate(url),
-		chromedp.AttributeValue(
-			".bundle-logo",
-			"alt",
-			&bundleName,
-			nil,
-			chromedp.ByQuery,
-		),
-		chromedp.Nodes(".item-bundleName", &items, chromedp.ByQueryAll),
-	); err != nil {
-		log.Fatalf("Failed data from %s: %v", url, err)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, node := range items {
+	resp, err := http.Post(
+		fmt.Sprintf(
+			"https://chrome.browserless.io/content?token=%s&headless=true&blockAds=true",
+			browserlessToken,
+		),
+		"application/json",
+		bytes.NewBuffer(reqBody),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func GetBundleData(browserlessToken string, url string) (
+	string,
+	[]string,
+	error,
+) {
+	htmlContent, err := getBundleContent(browserlessToken, url)
+	if err != nil {
+		return "", nil, nil
+	}
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlContent))
+	if err != nil {
+		return "", nil, err
+	}
+
+	bundleName, _ := doc.Find(".bundle-logo").First().Attr("val")
+
+	var itemNames []string
+
+	items := doc.Find(".item-title")
+	for _, bundleItem := range items.Nodes {
 		itemNames = append(
 			itemNames,
-			"- "+node.Children[0].NodeValue,
+			fmt.Sprintf("- %s", bundleItem.FirstChild.Data),
 		)
 	}
 
-	return bundleName, itemNames
+	return bundleName, itemNames, nil
 }
