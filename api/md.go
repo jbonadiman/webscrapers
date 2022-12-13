@@ -36,7 +36,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	response := fmt.Sprintf(
 		"Humble Bundle \"%s\" (%d items)\n\n%s",
-		strings.TrimLeft(strings.Split(bundleName, ":")[1], " "),
+		bundleName,
 		len(bundleItems),
 		strings.Join(bundleItems, "\n"),
 	)
