@@ -25,7 +25,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	response := strings.Builder{}
 	response.WriteString(
 		fmt.Sprintf(
-			`# %s\n\n<img src="%s" width="700"/>\n> tempo de preparo: %v\n## ingredientes\n`,
+			"# %s\n\n<img src=\"%s\" width=\"700\"/>\n> tempo de preparo: %v\n## ingredientes\n",
 			recipe.Name,
 			recipe.Image,
 			recipe.PrepTime,
