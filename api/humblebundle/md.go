@@ -24,7 +24,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
 
-	bundleName, bundleItems, err := internal.GetBundleData(
+	bundle, err := internal.GetBundleData(
 		browserlessToken,
 		url,
 	)
@@ -36,9 +36,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	response := fmt.Sprintf(
 		"Humble Bundle \"%s\" (%d items)\n\n%s",
-		bundleName,
-		len(bundleItems),
-		strings.Join(bundleItems, "\n"),
+		bundle.Name,
+		len(bundle.Items),
+		strings.Join(bundle.Items, "\n"),
 	)
 
 	w.WriteHeader(http.StatusOK)

@@ -10,6 +10,11 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+type Bundle struct {
+	Name  string
+	Items []string
+}
+
 func getBundleContent(browserlessToken string, url string) ([]byte, error) {
 	reqBody, err := json.Marshal(
 		map[string]string{"url": url},
@@ -46,18 +51,17 @@ func getBundleContent(browserlessToken string, url string) ([]byte, error) {
 }
 
 func GetBundleData(browserlessToken string, url string) (
-	string,
-	[]string,
+	Bundle,
 	error,
 ) {
 	htmlContent, err := getBundleContent(browserlessToken, url)
 	if err != nil {
-		return "", nil, nil
+		return Bundle{}, nil
 	}
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlContent))
 	if err != nil {
-		return "", nil, err
+		return Bundle{}, err
 	}
 
 	bundleName, _ := doc.Find(".bundle-logo").First().Attr("alt")
@@ -72,5 +76,8 @@ func GetBundleData(browserlessToken string, url string) (
 		)
 	}
 
-	return bundleName, itemNames, nil
+	return Bundle{
+		Name:  bundleName,
+		Items: itemNames,
+	}, nil
 }
