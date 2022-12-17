@@ -25,7 +25,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	response := strings.Builder{}
 	response.WriteString(
 		fmt.Sprintf(
-			"# %s\n\n<img src=\"%s\" width=\"700\"/>\n> tempo de preparo: %v\n## ingredientes\n",
+			"# %s\n\n<img src=\"%s\" width=\"700\"/>\n\n> tempo de preparo: %v\n\n## ingredientes\n",
 			recipe.Name,
 			recipe.Image,
 			recipe.PrepTime,
@@ -41,7 +41,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		response.WriteString(fmt.Sprintf("%d. %s\n", i+1, instruction))
 	}
 
-	response.WriteString("Observação: " + recipe.Notes)
+	response.WriteString("\nObservação: " + recipe.Notes)
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(response.String()))
