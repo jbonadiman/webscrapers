@@ -1,4 +1,4 @@
-package handler
+package humblebundle
 
 import (
 	"fmt"
