@@ -34,7 +34,7 @@ func GetRecipe(url string) Recipe {
 	)
 
 	c.OnHTML(
-		".attachment-post-thumbnail", func(e *colly.HTMLElement) {
+		"noscript > .attachment-post-thumbnail", func(e *colly.HTMLElement) {
 			recipe.Image = e.Attr("src")
 		},
 	)
