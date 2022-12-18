@@ -41,7 +41,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		response.WriteString(fmt.Sprintf("%d. %s\n", i+1, instruction))
 	}
 
-	response.WriteString("\nObservação: " + recipe.Notes)
+	if recipe.Notes != "" {
+		response.WriteString("\nObservação: " + recipe.Notes)
+	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
