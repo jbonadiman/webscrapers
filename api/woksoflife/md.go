@@ -49,7 +49,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	response := strings.Builder{}
 	response.WriteString(
 		fmt.Sprintf(
-			"# %s\n> original recipe: %s\n<img src=\"%s\" width=\"%d\"/>\n\n> prep time: %v\n\n## ingredients\n",
+			"# %s\n\n> original recipe: %s\n\n<img src=\"%s\" width=\"%d\"/>\n\n> prep time: %v\n\n## ingredients\n",
 			recipe.Name,
 			url,
 			recipe.Image,
