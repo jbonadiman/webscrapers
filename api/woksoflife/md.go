@@ -9,6 +9,8 @@ import (
 	"humblebundle-scraper/internal"
 )
 
+const IMAGE_SIZE = 400
+
 func normalizeFractions(line string) string {
 	replacements := map[string]string{
 		"1/2": "½",
@@ -47,9 +49,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	response := strings.Builder{}
 	response.WriteString(
 		fmt.Sprintf(
-			"# %s\n\n<img src=\"%s\" width=\"700\"/>\n\n> prep time: %v\n\n## ingredients\n",
+			"# %s\n\n<img src=\"%s\" width=\"%d\"/>\n\n> prep time: %v\n\n## ingredients\n",
 			recipe.Name,
 			recipe.Image,
+			IMAGE_SIZE,
 			recipe.PrepTime,
 		),
 	)
