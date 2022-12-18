@@ -3,10 +3,32 @@ package woksoflife
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"humblebundle-scraper/internal"
 )
+
+func normalizeFractions(line string) string {
+	replacements := map[string]string{
+		"1/2": "½",
+		"1/3": "⅓",
+		"2/3": "⅔",
+		"1/4": "¼",
+		"3/4": "¾",
+	}
+
+	r := regexp.MustCompile(`([123]/[234])`)
+	return r.ReplaceAllStringFunc(
+		line, func(match string) string {
+			if fraction, ok := replacements[match]; ok {
+				return fraction
+			}
+
+			return match
+		},
+	)
+}
 
 //goland:noinspection GoUnusedExportedFunction
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -33,12 +55,23 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	for _, ingredient := range recipe.Ingredients {
-		response.WriteString(fmt.Sprintf("* %s\n", ingredient))
+		response.WriteString(
+			fmt.Sprintf(
+				"* %s\n",
+				normalizeFractions(ingredient),
+			),
+		)
 	}
 
 	response.WriteString("\n## instructions\n")
 	for i, instruction := range recipe.Instructions {
-		response.WriteString(fmt.Sprintf("%d. %s\n", i+1, instruction))
+		response.WriteString(
+			fmt.Sprintf(
+				"%d. %s\n",
+				i+1,
+				normalizeFractions(instruction),
+			),
+		)
 	}
 
 	if recipe.Notes != "" {
