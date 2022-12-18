@@ -21,9 +21,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	url := queryParams.Get("url")
 	browserlessToken := queryParams.Get("browserlessToken")
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
-
 	bundle, err := internal.GetBundleData(
 		browserlessToken,
 		url,
@@ -41,6 +38,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		strings.Join(bundle.Items, "\n"),
 	)
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(response))
 }

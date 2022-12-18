@@ -43,6 +43,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	response.WriteString("\nObservação: " + recipe.Notes)
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(response.String()))
 }
