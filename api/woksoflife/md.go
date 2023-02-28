@@ -9,15 +9,18 @@ import (
 	"humblebundle-scraper/internal"
 )
 
-const IMAGE_SIZE = 400
+const ImageSize = 400
 
 func normalizeFractions(line string) string {
 	replacements := map[string]string{
 		"1/2": "½",
 		"1/3": "⅓",
-		"2/3": "⅔",
 		"1/4": "¼",
+		"2/3": "⅔",
 		"3/4": "¾",
+		"2/5": "⅖",
+		"3/5": "⅗",
+		"4/5": "⅘",
 	}
 
 	r := regexp.MustCompile(`([123]/[234])`)
@@ -36,15 +39,16 @@ func normalizeFractions(line string) string {
 func Handler(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 
-	if !queryParams.Has("url") {
+	if !queryParams.Has("url") || !queryParams.Has("browserlessToken") {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("the query params 'url'"))
+		_, _ = w.Write([]byte("the query params 'url' and 'browserlessToken' are required"))
 		return
 	}
 
 	url := queryParams.Get("url")
+	browserlessToken := queryParams.Get("browserlessToken")
 
-	recipe := internal.GetRecipe(url)
+	recipe, _ := internal.GetRecipe(browserlessToken, url)
 
 	response := strings.Builder{}
 	response.WriteString(
@@ -53,7 +57,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			recipe.Name,
 			url,
 			recipe.Image,
-			IMAGE_SIZE,
+			ImageSize,
 			recipe.PrepTime,
 		),
 	)
