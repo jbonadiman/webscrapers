@@ -54,7 +54,7 @@ func GetBundleData(browserlessToken string, url string) (
 	Bundle,
 	error,
 ) {
-	htmlContent, err := getBundleContent(browserlessToken, url)
+	htmlContent, err := GrabContent(browserlessToken, url)
 	if err != nil {
 		return Bundle{}, nil
 	}
