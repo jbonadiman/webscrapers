@@ -1,12 +1,13 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gocolly/colly"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Recipe struct {
@@ -23,75 +24,55 @@ func (r Recipe) String() string {
 	return string(recipe)
 }
 
-func GetRecipe(url string) Recipe {
-	recipe := Recipe{}
+func GetRecipe(browserlessToken, url string) (Recipe, error) {
+	htmlContent, err := GrabContent(browserlessToken, url)
+	if err != nil {
+		return Recipe{}, err
+	}
 
-	c := colly.NewCollector()
-	c.OnHTML(
-		".wprm-recipe-name", func(e *colly.HTMLElement) {
-			recipe.Name = e.Text
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlContent))
+	if err != nil {
+		return Recipe{}, err
+	}
+
+	name := doc.Find(".wprm-recipe-name").Text()
+
+	image, _ := doc.Find(".attachment-post-thumbnail").Attr("data-lazy-src")
+
+	var prepTime time.Duration
+
+	hours, err := strconv.Atoi(doc.Find(".wprm-recipe-total_time-hours").Text())
+	if err == nil {
+		prepTime += time.Duration(hours) * time.Hour
+	}
+
+	minutes, err := strconv.Atoi(doc.Find(".wprm-recipe-total_time-minutes").Text())
+	if err == nil {
+		prepTime += time.Duration(minutes) * time.Minute
+	}
+
+	var ingredients []string
+	doc.Find(".wprm-recipe-ingredient").Each(
+		func(_ int, s *goquery.Selection) {
+			ingredients = append(ingredients, strings.TrimLeft(s.Text(), "▢ "))
 		},
 	)
 
-	c.OnHTML(
-		".attachment-post-thumbnail", func(e *colly.HTMLElement) {
-			recipe.Image = e.Attr("data-lazy-src")
+	var instructions []string
+	doc.Find(".wprm-recipe-instruction").Each(
+		func(_ int, s *goquery.Selection) {
+			instructions = append(instructions, s.Text())
 		},
 	)
 
-	c.OnHTML(
-		".wprm-recipe-total_time-hours", func(e *colly.HTMLElement) {
-			hours, err := strconv.Atoi(e.Text)
-			if err == nil {
-				recipe.PrepTime += time.Duration(hours) * time.Hour
-			}
-		},
-	)
+	notes := doc.Find(".wprm-recipe-notes").Text()
 
-	c.OnHTML(
-		".wprm-recipe-total_time-minutes", func(e *colly.HTMLElement) {
-			minutes, err := strconv.Atoi(e.Text)
-			if err == nil {
-				recipe.PrepTime += time.Duration(minutes) * time.Minute
-			}
-		},
-	)
-
-	c.OnHTML(
-		".wprm-recipe-ingredients", func(wrapper *colly.HTMLElement) {
-			wrapper.ForEach(
-				".wprm-recipe-ingredient",
-				func(_ int, e *colly.HTMLElement) {
-					recipe.Ingredients = append(
-						recipe.Ingredients,
-						strings.TrimLeft(e.Text, "▢ "),
-					)
-				},
-			)
-		},
-	)
-
-	c.OnHTML(
-		".wprm-recipe-instructions", func(wrapper *colly.HTMLElement) {
-			wrapper.ForEach(
-				".wprm-recipe-instruction",
-				func(_ int, e *colly.HTMLElement) {
-					recipe.Instructions = append(
-						recipe.Instructions,
-						e.Text,
-					)
-				},
-			)
-		},
-	)
-
-	c.OnHTML(
-		".wprm-recipe-notes", func(e *colly.HTMLElement) {
-			recipe.Notes = e.Text
-		},
-	)
-
-	_ = c.Visit(url)
-
-	return recipe
+	return Recipe{
+		Name:         name,
+		Image:        image,
+		Ingredients:  ingredients,
+		Instructions: instructions,
+		Notes:        notes,
+		PrepTime:     prepTime,
+	}, nil
 }
