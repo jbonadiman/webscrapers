@@ -1,11 +1,9 @@
-package humblebundle
+package json
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
-	"humblebundle-scraper/internal"
+	"github.com/jbonadiman/webscrapers"
 )
 
 //goland:noinspection GoUnusedExportedFunction
@@ -21,7 +19,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	url := queryParams.Get("url")
 	browserlessToken := queryParams.Get("browserlessToken")
 
-	bundle, err := internal.GetBundleData(
+	bundle, err := webscrapers.GetBundleData(
 		browserlessToken,
 		url,
 	)
@@ -31,15 +29,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := fmt.Sprintf(
-		"Humble Bundle \"%s\" (%d items)\n\n%s",
-		bundle.Name,
-		len(bundle.Items),
-		strings.Join(bundle.Items, "\n"),
-	)
+	jsonBundle, err := bundle.ToJSON()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Add("Cache-Control", "max-age=0, s-maxage=86400")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(response))
+	_, _ = w.Write(jsonBundle)
 }

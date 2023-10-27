@@ -1,15 +1,19 @@
-package internal
+package webscrapers
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/json"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type Bundle struct {
-	Name  string
-	Items []string
+	Name  string   `json:"name"`
+	Items []string `json:"items"`
+}
+
+func (b Bundle) ToJSON() ([]byte, error) {
+	return json.Marshal(b)
 }
 
 func GetBundleData(browserlessToken string, url string) (
@@ -34,7 +38,7 @@ func GetBundleData(browserlessToken string, url string) (
 	for _, bundleItem := range items.Nodes {
 		itemNames = append(
 			itemNames,
-			fmt.Sprintf("- %s", bundleItem.FirstChild.Data),
+			bundleItem.FirstChild.Data,
 		)
 	}
 

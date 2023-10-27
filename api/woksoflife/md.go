@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"humblebundle-scraper/internal"
+	"github.com/jbonadiman/webscrapers"
 )
 
 const ImageSize = 400
@@ -48,7 +48,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	url := queryParams.Get("url")
 	browserlessToken := queryParams.Get("browserlessToken")
 
-	recipe, _ := internal.GetRecipe(browserlessToken, url)
+	recipe, _ := webscrapers.GetRecipe(browserlessToken, url)
 
 	response := strings.Builder{}
 	response.WriteString(
