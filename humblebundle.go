@@ -2,6 +2,9 @@ package webscrapers
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -9,6 +12,38 @@ import (
 type Bundle struct {
 	Name  string   `json:"name"`
 	Items []string `json:"items"`
+}
+
+func (b Bundle) ToMD() []byte {
+	builder := strings.Builder{}
+
+	builder.WriteString(
+		fmt.Sprintf(
+			"Humble Bundle %q (%d items)\n\n",
+			b.Name,
+			len(b.Items),
+		),
+	)
+
+	for _, item := range b.Items {
+		builder.WriteString(
+			fmt.Sprintf(
+				"- %s\n",
+				item,
+			),
+		)
+	}
+
+	return []byte(builder.String())
+}
+
+func (b Bundle) ToJSON() ([]byte, error) {
+	jsonBundle, err := json.Marshal(b)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonBundle, nil
 }
 
 func GetBundleData(browserlessToken string, url string) (
