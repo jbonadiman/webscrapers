@@ -2,7 +2,6 @@ package webscrapers
 
 import (
 	"bytes"
-	"encoding/json"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -10,10 +9,6 @@ import (
 type Bundle struct {
 	Name  string   `json:"name"`
 	Items []string `json:"items"`
-}
-
-func (b Bundle) ToJSON() ([]byte, error) {
-	return json.Marshal(b)
 }
 
 func GetBundleData(browserlessToken string, url string) (

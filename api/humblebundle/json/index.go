@@ -1,6 +1,7 @@
 package json
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/jbonadiman/webscrapers"
@@ -29,7 +30,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonBundle, err := bundle.ToJSON()
+	jsonBundle, err := json.Marshal(bundle)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))
