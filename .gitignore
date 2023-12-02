@@ -1,3 +1,4 @@
-.idea/
-template/
-build/
+/template/
+/build/
+.secrets
+/.idea/

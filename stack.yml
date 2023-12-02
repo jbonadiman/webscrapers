@@ -1,9 +1,9 @@
 version: 1.0
 provider:
   name: openfaas
-
+  gateway: http://oracle:8080
 functions:
-  faas-go-template:
+  webscrapers:
     lang: golang-middleware
     handler: .
-    image: ghcr.io/${OWNER}/faas-go-template:${TAG:-latest}
+    image: ghcr.io/jbonadiman/webscrapers:latest
