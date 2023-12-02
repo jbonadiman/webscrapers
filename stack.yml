@@ -1,0 +1,9 @@
+version: 1.0
+provider:
+  name: openfaas
+
+functions:
+  faas-test:
+    lang: golang-middleware
+    handler: .
+    image: ghcr.io/${OWNER}/faas-test:${TAG:-latest}
