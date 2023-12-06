@@ -55,8 +55,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	url := queryParams.Get(Url)
 
-	switch {
-	case strings.HasPrefix(url, "https://www.humblebundle.com"):
+	if strings.HasPrefix(url, "https://www.humblebundle.com") {
 		bundle, err := sources.GetBundleData(
 			queryParams.Get(BrowserlessToken),
 			queryParams.Get(Url),
@@ -77,14 +76,27 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write(jsonBundle)
+			break
+
 		case "md":
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "text/markdown")
 			_, _ = w.Write(bundle.ToMD())
+			break
+
+		default:
+			throwError(
+				w,
+				fmt.Errorf("invalid format %q", queryParams.Get(Format)),
+			)
+			return
 		}
-	case strings.HasPrefix(url, "https://www.woksoflife.com"):
-		// TODO
 	}
 
-	// w.Header().Set("Cache-Control", "max-age=0, s-maxage=86400")
+	if strings.HasPrefix(url, "https://www.woksoflife.com") {
+		throwError(w, fmt.Errorf("not implemented yet"))
+		return
+	}
+
+	w.Header().Set("Cache-Control", "max-age=0, s-maxage=86400")
 }
